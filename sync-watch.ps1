@@ -87,4 +87,4 @@ Register-ObjectEvent -InputObject $watcher -EventName Deleted -Action $onChange 
 # and to pull down anything pushed from another machine.
 & $syncAction
 
-while ($true) { Start-Sleep -Seconds 3600 }
+while ($true) { Wait-Event | Remove-Event }
