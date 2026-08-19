@@ -6,19 +6,29 @@ Zed settings synced via git, auto-committed and pushed on every change, on Windo
 
 Windows has no native "run task on file change" trigger, and this account has no
 symlink or Task Scheduler privilege, so config is kept in sync by a small
-always-on watcher (`sync-watch.ps1`) instead of symlinks. It uses
-`FileSystemWatcher` to react instantly to changes (no polling), sits at ~0% CPU
-while idle, and:
+always-on watcher instead of symlinks. It uses `FileSystemWatcher` to react
+instantly to changes (no polling), sits at ~0% CPU while idle, and:
 
 - on change in `%APPDATA%\Zed\` → copies changed files into this repo, commits, pulls, pushes
 - on pull bringing in changes from another machine → copies them back onto `%APPDATA%\Zed\`
 
 It launches at logon via a silent VBScript in the Startup folder (no console window).
+The watcher itself lives in the parent [`dotfiles`](https://github.com/HromasDev/dotfiles)
+repo, at `scripts/watch-sync.ps1` — one generic script reused by every synced
+config, not a copy per repo.
 
 ### Setup on a new Windows machine
 
+Easiest: clone the [`dotfiles`](https://github.com/HromasDev/dotfiles) repo and run
+`.\bootstrap.ps1 -Only zed` — it clones this repo as a submodule, seeds
+`%APPDATA%\Zed\`, and starts the watcher for you.
+
+To wire it up manually instead:
+
 ```powershell
 git clone <this-repo-url> $env:USERPROFILE\dotfiles-zed
+git clone https://github.com/HromasDev/dotfiles.git $env:USERPROFILE\dotfiles --depth 1 -n
+git -C $env:USERPROFILE\dotfiles show HEAD:scripts/watch-sync.ps1 > $env:USERPROFILE\dotfiles-zed\..\watch-sync.ps1
 
 # copy current live config into the repo once (skip if repo already has what you want)
 $live = "$env:APPDATA\Zed"
@@ -28,10 +38,11 @@ Copy-Item "$live\snippets","$live\themes" $repo -Recurse -Force
 
 # install the silent startup launcher
 $startup = [Environment]::GetFolderPath('Startup')
-$scriptPath = "$env:USERPROFILE\dotfiles-zed\sync-watch.ps1"
+$watchScript = "$env:USERPROFILE\dotfiles\scripts\watch-sync.ps1"
+$args = "-RepoPath ""$repo"" -LiveDir ""$live"" -Items settings.json,keymap.json,tasks.json,snippets,themes"
 $vbs = @"
 Set objShell = CreateObject("WScript.Shell")
-objShell.Run "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""$scriptPath""", 0, False
+objShell.Run "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""$watchScript"" $args", 0, False
 "@
 Set-Content -Path (Join-Path $startup "ZedConfigSync.vbs") -Value $vbs -Encoding ASCII
 
