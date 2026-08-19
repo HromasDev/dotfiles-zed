@@ -1,0 +1,34 @@
+[
+	{
+		"context": "Terminal",
+		"bindings": {
+			"ctrl-s": ["terminal::SendKeystroke", "ctrl-s"],
+		},
+	},
+	{
+		"bindings": {
+			"cmd-alt-g": [
+				"agent::NewExternalAgentThread",
+				{ "agent": { "custom": { "name": "gemini" } } },
+			],
+		},
+	},
+	{
+		"context": "Editor",
+		"bindings": {
+			"alt-enter": "editor::ToggleCodeActions",
+		},
+	},
+	{
+		"context": "Workspace",
+		"bindings": {
+			// "shift shift": "file_finder::Toggle"
+		},
+	},
+	{
+		"context": "Editor && vim_mode == insert",
+		"bindings": {
+			// "j k": "vim::NormalBefore"
+		},
+	},
+]
