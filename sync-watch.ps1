@@ -6,7 +6,7 @@
 # process (near-zero CPU/RAM while idle) is used instead of hardlinks.
 
 $ErrorActionPreference = "SilentlyContinue"
-$global:repo = "$env:USERPROFILE\dotfiles-zed"
+$global:repo = $PSScriptRoot
 $global:liveDir = "$env:APPDATA\Zed"
 $global:repoDir = "$global:repo\zed"
 $debounceMs = 5000
